@@ -1,14 +1,8 @@
-import sys
 from datetime import datetime
 from .compat import string_type
 from typing import (
-    Any, List, Sequence
+    Any, Sequence, Union
 )
-PEP_560 = sys.version_info[:3] >= (3, 7, 0)
-if PEP_560:  # pragma: no cover
-    from typing import _GenericAlias, Union
-else:  # pragma: no cover
-    from typing import _Union
 
 
 class TypingExtractor(object):
@@ -102,21 +96,9 @@ def _extract_datetime(extractor, typ):
 
 
 def _is_sequence(typ):
-    """
-    returns True if the type in question
-    is a Sequence[] object from the typing module.
-    """
-    # PEP_560 deprecates issubclass for
-    # List types, for the time being
-    # we'll support a specific escape hatch.
-    if PEP_560:  # pragma: no cover
-        return isinstance(typ, _GenericAlias) and typ.__origin__ is list
-    else:  # pragma: no cover
-        return issubclass(typ, Sequence)
+    origin = getattr(typ, "__origin__", None)
+    return origin and issubclass(origin, Sequence)
 
 
 def _is_union(typ):
-    if PEP_560:  # pragma: no cover
-        return isinstance(typ, _GenericAlias) and typ.__origin__ is Union
-    else:  # pragma: no cover
-        return isinstance(typ, _Union)
+    return getattr(typ, "__origin__", None) is Union
